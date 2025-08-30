@@ -148,7 +148,7 @@ public class Vane implements Extension {
                 .textureSize(16)
                 .creativeCategory(CreativeCategory.EQUIPMENT.id())
                 .build();
-        event.register("minecraft:diamond_hoe", golden_sickle);
+        event.register("minecraft:golden_hoe", golden_sickle);
 
         //
         // HONEY BOTTLE
@@ -186,7 +186,7 @@ public class Vane implements Extension {
                 .textureSize(16)
                 .creativeCategory(CreativeCategory.EQUIPMENT.id())
                 .build();
-        event.register("minecraft:diamond_hoe", iron_sickle);
+        event.register("minecraft:iron_hoe", iron_sickle);
 
         //
         // NETHERITE HOE
@@ -197,7 +197,7 @@ public class Vane implements Extension {
                 .textureSize(16)
                 .creativeCategory(CreativeCategory.EQUIPMENT.id())
                 .build();
-        event.register("minecraft:diamond_hoe", netherite_sickle);
+        event.register("minecraft:netherite_hoe", netherite_sickle);
 
         //
         // PAPER
