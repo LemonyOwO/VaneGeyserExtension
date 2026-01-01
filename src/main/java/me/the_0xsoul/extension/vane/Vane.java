@@ -9,6 +9,7 @@ import org.geysermc.geyser.api.item.custom.CustomItemData;
 import org.geysermc.geyser.api.item.custom.CustomItemOptions;
 import org.geysermc.geyser.api.util.CreativeCategory;
 
+import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 
@@ -27,13 +28,12 @@ public class Vane implements Extension {
     }
 
     /**
-     * Geyser 2.9 safe fallback
+     * Geyser 2.9 safe path (reflection-based)
      */
     @Subscribe
     public void onPostInitialize(GeyserPostInitializeEvent event) {
         if (registrar == null) {
-            registrar = (vanilla, item) ->
-                    geyserApi().getCustomItemRegistry().register(vanilla, item);
+            registrar = create2_9Registrar();
         }
         tryRegister();
     }
@@ -55,6 +55,34 @@ public class Vane implements Extension {
         logger().info("Vane custom items registered (2.8 + 2.9 compatible)");
     }
 
+    /**
+     * Reflection bridge for Geyser 2.9+
+     */
+    private BiConsumer<String, CustomItemData> create2_9Registrar() {
+        try {
+            Object geyserApi = geyserApi();
+
+            Method getRegistry = geyserApi.getClass()
+                    .getMethod("getCustomItemRegistry");
+
+            Object registry = getRegistry.invoke(geyserApi);
+
+            Method register = registry.getClass()
+                    .getMethod("register", String.class, CustomItemData.class);
+
+            return (vanilla, item) -> {
+                try {
+                    register.invoke(registry, vanilla, item);
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to register custom item", e);
+                }
+            };
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Geyser 2.9 detected but CustomItemRegistry API not found", e);
+        }
+    }
+
     private void registerCustomItems() {
 
         //
@@ -62,64 +90,4 @@ public class Vane implements Extension {
         //
         register("minecraft:book", "ancient_tome", 7798784, CreativeCategory.ITEMS);
         register("minecraft:book", "ancient_tome_of_knowledge", 7798786, CreativeCategory.ITEMS);
-        register("minecraft:book", "ancient_tome_of_the_gods", 7798788, CreativeCategory.ITEMS);
-
-        //
-        // COMPASS
-        //
-        register("minecraft:compass", "north_compass", 7733267, CreativeCategory.EQUIPMENT);
-
-        //
-        // DIAMOND HOE
-        //
-        register("minecraft:diamond_hoe", "diamond_sickle", 7733256, CreativeCategory.EQUIPMENT);
-
-        //
-        // DROPPER
-        //
-        register("minecraft:dropper", "pouch", 7733270, CreativeCategory.ITEMS);
-
-        //
-        // ELYTRA
-        //
-        register("minecraft:elytra", "reinforced_elytra", 7733250, CreativeCategory.EQUIPMENT);
-
-        //
-        // ENCHANTED BOOK
-        //
-        register("minecraft:enchanted_book", "enchanted_ancient_tome", 7798785, CreativeCategory.ITEMS);
-        register("minecraft:enchanted_book", "enchanted_ancient_tome_of_knowledge", 7798787, CreativeCategory.ITEMS);
-        register("minecraft:enchanted_book", "enchanted_ancient_tome_of_the_gods", 7798789, CreativeCategory.ITEMS);
-
-        //
-        // GLASS BOTTLE
-        //
-        register("minecraft:glass_bottle", "empty_xp_bottle", 7733258, CreativeCategory.EQUIPMENT);
-        register("minecraft:glass_bottle", "small_xp_bottle", 7733259, CreativeCategory.ITEMS);
-        register("minecraft:glass_bottle", "medium_xp_bottle", 7733260, CreativeCategory.EQUIPMENT);
-        register("minecraft:glass_bottle", "large_xp_bottle", 7733261, CreativeCategory.EQUIPMENT);
-
-        //
-        // WOODEN HOE
-        //
-        register("minecraft:wooden_hoe", "wooden_sickle", 7733252, CreativeCategory.EQUIPMENT);
-    }
-
-    private void register(String vanilla, String name, int modelData, CreativeCategory category) {
-        CustomItemData item = CustomItemData.builder()
-                .name(name)
-                .customItemOptions(CustomItemOptions.builder()
-                        .customModelData(modelData)
-                        .build())
-                .textureSize(16)
-                .creativeCategory(category.id())
-                .build();
-
-        registrar.accept(vanilla, item);
-    }
-
-    @Subscribe
-    public void onResourcePacks(GeyserDefineResourcePacksEvent event) {
-        logger().info("Loading: " + event.resourcePacks().size() + " resource packs.");
-    }
-}
+        register("minecraft:book", "anc
