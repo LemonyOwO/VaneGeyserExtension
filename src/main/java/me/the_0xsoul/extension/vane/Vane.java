@@ -90,4 +90,49 @@ public class Vane implements Extension {
         //
         register("minecraft:book", "ancient_tome", 7798784, CreativeCategory.ITEMS);
         register("minecraft:book", "ancient_tome_of_knowledge", 7798786, CreativeCategory.ITEMS);
-        register("minecraft:book", "anc
+        register("minecraft:book", "ancient_tome_of_the_gods", 7798788, CreativeCategory.ITEMS);
+
+        //
+        // COMPASS
+        //
+        register("minecraft:compass", "north_compass", 7733267, CreativeCategory.EQUIPMENT);
+
+        //
+        // DIAMOND HOE
+        //
+        register("minecraft:diamond_hoe", "diamond_sickle", 7733256, CreativeCategory.EQUIPMENT);
+
+        //
+        // DROPPER
+        //
+        register("minecraft:dropper", "pouch", 7733270, CreativeCategory.ITEMS);
+
+        //
+        // ELYTRA
+        //
+        register("minecraft:elytra", "reinforced_elytra", 7733250, CreativeCategory.EQUIPMENT);
+
+        //
+        // WOODEN HOE
+        //
+        register("minecraft:wooden_hoe", "wooden_sickle", 7733252, CreativeCategory.EQUIPMENT);
+    }
+
+    private void register(String vanilla, String name, int modelData, CreativeCategory category) {
+        CustomItemData item = CustomItemData.builder()
+                .name(name)
+                .customItemOptions(CustomItemOptions.builder()
+                        .customModelData(modelData)
+                        .build())
+                .textureSize(16)
+                .creativeCategory(category.id())
+                .build();
+
+        registrar.accept(vanilla, item);
+    }
+
+    @Subscribe
+    public void onResourcePacks(GeyserDefineResourcePacksEvent event) {
+        logger().info("Loading: " + event.resourcePacks().size() + " resource packs.");
+    }
+}
