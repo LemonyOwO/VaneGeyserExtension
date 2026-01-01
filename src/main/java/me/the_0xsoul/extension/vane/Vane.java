@@ -10,25 +10,31 @@ import org.geysermc.geyser.api.item.custom.CustomItemOptions;
 import org.geysermc.geyser.api.util.CreativeCategory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 
 public class Vane implements Extension {
 
-    /** Ensures we only register once */
     private final AtomicBoolean registered = new AtomicBoolean(false);
+    private BiConsumer<String, CustomItemData> registrar;
 
     /**
-     * Geyser 2.8 path (safe there, unsafe on 2.9 Velocity)
+     * Geyser 2.8 path
      */
     @Subscribe
     public void onDefineCustomItems(GeyserDefineCustomItemsEvent event) {
+        registrar = event::register;
         tryRegister();
     }
 
     /**
-     * Geyser 2.9 safe path
+     * Geyser 2.9 safe fallback
      */
     @Subscribe
     public void onPostInitialize(GeyserPostInitializeEvent event) {
+        if (registrar == null) {
+            registrar = (vanilla, item) ->
+                    geyserApi().getCustomItemRegistry().register(vanilla, item);
+        }
         tryRegister();
     }
 
@@ -94,53 +100,6 @@ public class Vane implements Extension {
         register("minecraft:glass_bottle", "large_xp_bottle", 7733261, CreativeCategory.EQUIPMENT);
 
         //
-        // GOLDEN HOE
-        //
-        register("minecraft:golden_hoe", "golden_sickle", 7733255, CreativeCategory.EQUIPMENT);
-
-        //
-        // IRON HOE
-        //
-        register("minecraft:iron_hoe", "iron_sickle", 7733254, CreativeCategory.EQUIPMENT);
-
-        //
-        // NETHERITE HOE
-        //
-        register("minecraft:netherite_hoe", "netherite_sickle", 7733257, CreativeCategory.EQUIPMENT);
-
-        //
-        // PAPER
-        //
-        register("minecraft:paper", "papyrus_scroll", 7733263, CreativeCategory.ITEMS);
-
-        //
-        // SHULKER BOX
-        //
-        register("minecraft:shulker_box", "backpack", 7733271, CreativeCategory.ITEMS);
-
-        //
-        // SLIME BALL
-        //
-        register("minecraft:slime_ball", "slime_bucket", 7733268, CreativeCategory.ITEMS);
-        register("minecraft:slime_ball", "slime_bucket_excited", 7733269, CreativeCategory.ITEMS);
-
-        //
-        // STONE HOE
-        //
-        register("minecraft:stone_hoe", "stone_sickle", 7733253, CreativeCategory.EQUIPMENT);
-
-        //
-        // WARPED FUNGUS ON A STICK
-        //
-        register("minecraft:warped_fungus_on_a_stick", "home_scroll", 7733248, CreativeCategory.EQUIPMENT);
-        register("minecraft:warped_fungus_on_a_stick", "unstable_scroll", 7733249, CreativeCategory.EQUIPMENT);
-        register("minecraft:warped_fungus_on_a_stick", "file", 7733251, CreativeCategory.EQUIPMENT);
-        register("minecraft:warped_fungus_on_a_stick", "trowel", 7733262, CreativeCategory.EQUIPMENT);
-        register("minecraft:warped_fungus_on_a_stick", "spawn_scroll", 7733264, CreativeCategory.EQUIPMENT);
-        register("minecraft:warped_fungus_on_a_stick", "lodestone_scroll", 7733265, CreativeCategory.EQUIPMENT);
-        register("minecraft:warped_fungus_on_a_stick", "death_scroll", 7733266, CreativeCategory.EQUIPMENT);
-
-        //
         // WOODEN HOE
         //
         register("minecraft:wooden_hoe", "wooden_sickle", 7733252, CreativeCategory.EQUIPMENT);
@@ -156,7 +115,7 @@ public class Vane implements Extension {
                 .creativeCategory(category.id())
                 .build();
 
-        geyserApi().customItemRegistry().register(vanilla, item);
+        registrar.accept(vanilla, item);
     }
 
     @Subscribe
